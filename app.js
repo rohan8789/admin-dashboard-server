@@ -2,9 +2,12 @@ const express = require('express')
 const cors = require('cors')
 const mongoose = require('mongoose')
 const adminRouter = require('./routes/admin-router')
+const path = require("path")
 
 const app = express();
 
+app.use("/uploads/images", express.static(path.join("uploads", "images")));
+app.use("/uploads/others", express.static(path.join("uploads", "others")));
 app.use(cors());
 app.use(express.json());
 app.use('/api/admin', adminRouter);
