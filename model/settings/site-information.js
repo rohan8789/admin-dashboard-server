@@ -3,7 +3,7 @@ const uniqueValidator = require("mongoose-unique-validator");
 
 const Schema = mongoose.Schema;
 
-const generalSchema = new Schema(
+const siteInformationSchema = new Schema(
   {
     title: { type: String, required: true},
     logo: { type: String },
@@ -16,6 +16,6 @@ const generalSchema = new Schema(
   }
 );
 
-generalSchema.plugin(uniqueValidator);
+siteInformationSchema.plugin(uniqueValidator);
 
-module.exports = mongoose.model("General", generalSchema);
+module.exports = mongoose.model("SiteInformation", siteInformationSchema);

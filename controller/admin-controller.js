@@ -10,21 +10,17 @@ let counter=3;
 
 const getAdminDetails = async (req, res) => {
   const adminId = req.params.adminId;
-  console.log("This route is hit", req.params);
   let getAdmin;
   try{
     getAdmin = await Admin.findById({_id:adminId}, '-password');
   }catch(err){
-    console.log("err", err);
+    // console.log("err", err);
     return res.status(500).json({message:"something went wrong while fetching admin details"});
   }
   if(!getAdmin){
-    console.log("Admin with this id does not exist");
     return res.status(201).json({message:"Admin with this id does not exist"});
   }
   const countPairs = Object.keys(getAdmin.toObject()).length;
-  console.log(getAdmin);
-  console.log(countPairs);//6
   if(countPairs<10){
     return res.status(401).json({});
   }
@@ -45,8 +41,6 @@ const ChangePassword = async (req, res) => {
   if (!existingUser) {
     return res.status(401).json({ message: "cannot find user by this id" });
   }
-  console.log(existingUser);
-  console.log("userId", userId);
 
   let compareCurrPassword;
   try {
@@ -54,11 +48,9 @@ const ChangePassword = async (req, res) => {
   } catch (err) {
     return res.status(500).json({ message: "Something went wrong while comaparing password" });
   }
-  // console.log("Comparison Result", compareCurrPassword);
   if (!compareCurrPassword) {
     return res.status(403).json({ message: "Your current password did not match existing password" });
   }
-
 
   if (password !== repassword) {
     return res.status(400).json({ message: "password mis-match" });
@@ -68,20 +60,16 @@ const ChangePassword = async (req, res) => {
     encryptPwd = await bcrypt.hash(password, 12);
     existingUser.password = encryptPwd;
   } catch (err) {
-    console.log(err);
+    // console.log(err);
     return res.status(500).json({ message: "password encryption failed" });
   }
 
   try {
     await existingUser.save();
   } catch (err) {
-    return res
-      .status(500)
-      .json({ message: "Failed to save user after password change" });
+    return res.status(500).json({ message: "Failed to save user after password change" });
   }
-  return res
-    .status(201)
-    .json({ message: "Password successfully changed. Try logging in..." });
+  return res.status(201).json({ message: "Password successfully changed. Try logging in..." });
 };
 
 const ResetPwd = async (req, res) => {
@@ -120,12 +108,9 @@ const ResetPwd = async (req, res) => {
   };
 
   transporter.sendMail(mail, (err, info) => {
-    console.log("Hellllo");
     if (err) {
-      console.log("Err", err);
       return res.status(500).json({ message: "Error sending email" });
     } else {
-      console.log(info.response, "server is ready");
       return res
         .status(200)
         .json({ message: "Password reset instructions sent to your email" });
@@ -140,7 +125,7 @@ const ResetPwd = async (req, res) => {
       { expiresIn: "1h" }
     );
   } catch (err) {
-    console.log(err);
+    // console.log(err);
     return res.status(500).json({
       message: "Something went wrong while token creation in login.",
     });
@@ -163,7 +148,7 @@ const loginAdmin = async (req, res) => {
     } catch (err) {
       return res.status(500).json({ message: "Something went wrong while finding admin email" });
     }
-    console.log("wtf",existingAdmin)
+
     if (!existingAdmin){
       counter-=1;
       if(counter===0){
@@ -234,13 +219,9 @@ const loginAdmin = async (req, res) => {
         { expiresIn: "1h" }
       );
     } catch (err) {
-      console.log(err);
       return res
         .status(500)
-        .json({
-          message: "Something went wrong while token creation in login.",
-          count: count,
-        });
+        .json({message: "Something went wrong while token creation in login."});
     }
     counter = 3;
     try {
@@ -257,19 +238,13 @@ const loginAdmin = async (req, res) => {
 };
 
 const adminProfile = async (req, res) =>{
-  // console.log(req.body)
   let {fname, lname, empid, email, dob, phno} = req.body;
-  console.log("req file",req.files)
   let checkAdmin;
   try{
     checkAdmin = await Admin.findOne({email});
-    const a = await Admin.find({})
-    console.log(a, email);
   }catch(err){
-    console.log("verification error: ",err);
     return res.status(500).json({message:"Something went wrong while verifying admin"});
   }
-  console.log("half details",checkAdmin)
   if(checkAdmin){
     try{
       checkAdmin.fname=fname;
@@ -280,10 +255,8 @@ const adminProfile = async (req, res) =>{
       if(req.file)checkAdmin.image=req.file.path;
       await checkAdmin.save();
     }catch(err){
-      console.log("Saving error ",err);
       res.status(500).json({message:"Something went wrong while saving admin details"})
     }
-    console.log("complete details", checkAdmin);
     return res.status(201).json({admin:checkAdmin});
   }else{
     return res.status(404).json({message:"Details does not corresponds to existing admin"});
