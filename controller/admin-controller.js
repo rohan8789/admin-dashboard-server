@@ -27,8 +27,6 @@ const getAdminDetails = async (req, res) => {
   return res.status(201).json({admin:getAdmin});
 }
 
-
-
 const ChangePassword = async (req, res) => {
   const userId = req.params.userId;
   const {currPassword, password, repassword } = req.body;
@@ -41,15 +39,16 @@ const ChangePassword = async (req, res) => {
   if (!existingUser) {
     return res.status(401).json({ message: "cannot find user by this id" });
   }
-
-  let compareCurrPassword;
-  try {
-    compareCurrPassword = await bcrypt.compare(currPassword, existingUser.password);
-  } catch (err) {
-    return res.status(500).json({ message: "Something went wrong while comaparing password" });
-  }
-  if (!compareCurrPassword) {
-    return res.status(403).json({ message: "Your current password did not match existing password" });
+  if(currPassword){
+    let compareCurrPassword;
+    try {
+      compareCurrPassword = await bcrypt.compare(currPassword, existingUser.password);
+    } catch (err) {
+      return res.status(500).json({ message: "Something went wrong while comaparing password" });
+    }
+    if (!compareCurrPassword) {
+      return res.status(403).json({ message: "Your current password did not match existing password" });
+    }
   }
 
   if (password !== repassword) {
@@ -104,7 +103,7 @@ const ResetPwd = async (req, res) => {
     from: "rohansinghrp180@gmail.com",
     to: "rohansingh.cs4835@gmail.com",
     Subject: "Password Reset",
-    text: `You have requested a password reset for your account. Please click the following link to reset your password within 1 hour:\n${resetURL}\n\nIf you did not request a password reset, please ignore this email.`,
+    text: `You have requested a password reset for your account. Please click the following link to reset your password:\n${resetURL}\n\nIf you did not request a password reset, please ignore this email.`,
   };
 
   transporter.sendMail(mail, (err, info) => {
@@ -163,10 +162,11 @@ const loginAdmin = async (req, res) => {
     } catch (err) {
       return res.status(500).json({ message: "password encryption failed" });
     }
-    let createdAdmin = new Admin({ email, password: encryptPwd});
+    let createdAdmin = new Admin({ email, password: encryptPwd, role:"Admin"});
     try {
       await createdAdmin.save();
     } catch (err) {
+      //console.log(err)
       return res.status(500).json({ message: "Creating Admin failed" });
     }
     let token;
@@ -186,7 +186,7 @@ const loginAdmin = async (req, res) => {
     try {
       existingAdmin = await Admin.findOne({ email: email });
     } catch (err) {
-      return res.status(401).json({message: "Something went wrong while finding email id",});
+      return res.status(401).json({message: "Something went wrong while finding email id"});
     }
     if (!existingAdmin) {
       counter -= 1;
@@ -219,9 +219,7 @@ const loginAdmin = async (req, res) => {
         { expiresIn: "1h" }
       );
     } catch (err) {
-      return res
-        .status(500)
-        .json({message: "Something went wrong while token creation in login."});
+      return res.status(500).json({message: "Something went wrong while token creation in login."});
     }
     counter = 3;
     try {
@@ -232,6 +230,7 @@ const loginAdmin = async (req, res) => {
     return res.status(201).json({
       name: existingAdmin.name,
       userId: existingAdmin?._id,
+      admin:existingAdmin,
       token: token,
     });
   }
@@ -262,6 +261,5 @@ const adminProfile = async (req, res) =>{
     return res.status(404).json({message:"Details does not corresponds to existing admin"});
   }
 }
-
 
 module.exports = { loginAdmin, ResetPwd, ChangePassword, adminProfile, getAdminDetails };
